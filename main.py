@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, render_template, redirect, url_for, flash, abort
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
@@ -10,7 +12,7 @@ from forms import CreatePostForm, CreateUserForm, LoginForm, CommentForm
 from flask_gravatar import Gravatar
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 ckeditor = CKEditor(app)
 Bootstrap(app)
 gravatar = Gravatar(app,
@@ -23,7 +25,8 @@ gravatar = Gravatar(app,
                     base_url=None)
 
 ##CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI')
+# print("env1", os.environ["app.config['SECRET_KEY']"])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -164,13 +167,16 @@ def show_post(post_id):
     requested_post = BlogPost.query.get(post_id)
 
     if form.validate_on_submit():
-        comment = Comment(
-            text=form.comment.data,
-            author=current_user,
-            post=requested_post,
-        )
 
         if current_user.is_authenticated:
+            comment = Comment(
+                text=form.comment.data,
+                author=current_user,
+                post=requested_post,
+            )
+            print("------------------------")
+            print(current_user.is_authenticated)
+            print("------------------------")
             db.session.add(comment)
             db.session.commit()
             print(comment.author_id)
